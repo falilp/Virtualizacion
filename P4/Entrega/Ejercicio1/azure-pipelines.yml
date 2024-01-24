@@ -1,0 +1,38 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: SonarQubePrepare@5
+  inputs:
+    SonarQube: 'SonarK'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'vsAzure_vsAzure_AYyld2zCyILi-MNuEvd5'
+    cliProjectName: 'vsAzure'
+    cliSources: '.'
+  displayName: 'Preparando Sonar'
+
+- task: HelmInstaller@0
+  inputs:
+    helmVersion: '2.14.1'
+    installKubectl: true
+  displayName: 'Instalar Kubernetes'
+
+- script: |
+    kind create cluster --config kindConfig.yaml
+    kubectl apply -f drupalConfig.yaml
+    kubectl apply -f mysqlConfig.yaml
+  displayName: 'Despliegue Kubernetes'
+
+- task: SonarQubeAnalyze@5
+  inputs:
+    jdkversion: 'JAVA_HOME_11_X64'
+  displayName: 'Ejecutar sonar'
+
+- task: SonarQubePublish@5
+  inputs:
+    pollingTimeoutSec: '300'
+  displayName: 'Publicar sonar'

@@ -1,0 +1,43 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: SonarQubePrepare@5
+  inputs:
+    SonarQube: 'SonarK'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'vsTerraform_vsTerraform_AYyqluuL6MiTmyf4G02t'
+    cliProjectName: 'vsTerraform'
+    cliSources: '.'
+  displayName: 'Preparando Sonar'
+
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '3.1.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+
+- script: |
+    terraform init
+    terraform validate
+  displayName: 'Terraform Init and Validate'
+
+- script: 'terraform plan -out=tfplan'
+  displayName: 'Terraform Plan'
+
+- script: 'terraform apply -auto-approve tfplan'
+  displayName: 'Terraform Apply'
+
+- task: SonarQubeAnalyze@5
+  inputs:
+    jdkversion: 'JAVA_HOME_11_X64'
+  displayName: 'Ejecutar sonar'
+
+- task: SonarQubePublish@5
+  inputs:
+    pollingTimeoutSec: '300'
+  displayName: 'Publicar sonar'

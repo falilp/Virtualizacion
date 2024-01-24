@@ -1,0 +1,30 @@
+# Versión de la sintaxis de Docker Compose
+version: '3'
+
+# Definición de networks
+networks:
+  redDocker:
+
+# Definición de los servicios
+services:
+  # Servicio de wordpress
+  wordpress:
+    # Imagen de Docker a utilizar para WordPress
+    image: wordpress:latest
+    # Mapeo de puertos, asignando el puerto 82 en el host al puerto 80 en el contenedor
+    ports:
+      - 82:80
+    # Definimos el networks para wordpress
+    networks:
+      - redDocker
+
+  # Servicio de MariaDB
+  mariadb:
+    # Imagen de Docker a utilizar para mariadb
+    image: mariadb:latest
+    # Variables de entorno para configurar MariaDB
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_ROOT_PASSWORD: root 
+    networks:
+      - redDocker

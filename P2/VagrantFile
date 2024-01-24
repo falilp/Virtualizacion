@@ -1,0 +1,29 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu1804"
+  config.vm.network "forwarded_port", guest: 8085, host: 8085
+
+  config.vm.provision "file", source: "./kindConfig.yaml", destination: "vagrant/kindConfig.yaml"
+  config.vm.provision "file", source: "./drupalConfig.yaml", destination: "vagrant/drupalConfig.yaml"
+  config.vm.provision "file", source: "./mysqlConfig.yaml", destination: "vagrant/mysqlConfig.yaml"
+
+  config.vm.provision "shell", inline: <<-SHELL
+      sudo apt-get update
+      
+      sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+      sudo apt-get update
+      sudo apt-get install -y docker-ce
+
+      [ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
+      sudo chmod +x ./kind
+      sudo mv ./kind /usr/local/bin/kind
+
+      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+      kind create cluster --config vagrant/kindConfig.yaml
+      kubectl apply -f vagrant/drupalConfig.yaml
+      kubectl apply -f vagrant/mysqlConfig.yaml
+  SHELL
+end

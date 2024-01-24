@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+
+#Se especifican las características de la implementación.
+spec:
+  replicas: 1 #Indica el numero de replicas
+
+#Se define el selector de la implementación.
+  selector:
+    matchLabels:
+      app: mysql
+
+#Se define la plantilla de la implementación.
+  template:
+    metadata:
+      labels:
+        app: mysql
+
+#Características de la plantilla.
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:latest #La imagen del contenedor.
+          ports:
+            - containerPort: 3306 #El puerto del contenedor.
+
+#Se definen las variables de entorno del contenedor.
+          env:
+          - name: MYSQL_HOST
+            value: 'localhost'
+          - name: MYSQL_ALLOW_EMPTY_PASSWORD
+            value: 'yes'
+          - name: MYSQL_DATABASE
+            value: 'VS'
+
+#Se definen los montajes de volumen del contenedor.
+          volumeMounts:
+          - name: mysqlpersistentstorage 
+            mountPath: /mysql
+
+#Se definen los volúmenes de la plantilla. 
+      volumes: 
+        - name: mysqlpersistentstorage 
+          persistentVolumeClaim: #La reclamación del volumen persistente.
+            claimName: mysqlpvcclaim 
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+
+#Se especifican las características del servicio.
+spec:
+  type: ClusterIP #El tipo de servicio. ClusterIP permite acceder al servicio desde dentro del clúster.
+
+#Se define el selector del servicio.  
+  selector:
+    app: mysql
+
+#Se definen los puertos del servicio.
+  ports:
+    - name: http
+      port: 3306 #El puerto del servicio.
+      targetPort: 3306 #El puerto del contenedor al que se mapeará el puerto del servicio.
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim 
+metadata:
+  name: mysqlpvcclaim 
+
+#Se especifican las características de la reclamación del volumen persistente.
+spec:
+  accessModes:
+    - ReadWriteOnce #El modo de acceso. ReadWriteOnce permite que el volumen sea leído y escrito por un único nodo.
+
+#Se definen los recursos de la reclamación del volumen persistente.  
+  resources:
+    requests:
+      storage: 256Mi 

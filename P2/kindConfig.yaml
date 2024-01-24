@@ -1,0 +1,16 @@
+#Se define el tipo de recurso - Cluster 
+kind: Cluster
+
+#Se especifica la versión de la API de Kind
+apiVersion: kind.x-k8s.io/v1alpha4
+
+#Se define el nodo en el Cluster, el cual tiene el role de control-plane
+nodes:
+- role: control-plane
+
+#Se mapea para el nodo, en el puerto 30080 del contendor
+#se mapeará al puerto 8085 utilizando el protocolo TCP
+  extraPortMappings:
+  - containerPort: 30080
+    hostPort: 8085
+    protocol: TCP

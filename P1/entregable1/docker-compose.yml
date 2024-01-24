@@ -1,0 +1,31 @@
+# Versión de la sintaxis de Docker Compose
+version: '3'
+
+# Definición de volúmenes
+volumes:
+  volumenDocker:
+
+# Definición de los servicios
+services:
+  # Servicio para Drupal
+  drupal:
+    # Imagen de Docker a utilizar para Drupal
+    image: drupal:latest
+    # Mapeo de puertos, asignando el puerto 81 en el host al puerto 80 en el contenedor
+    ports:
+      - 81:80
+    # Definición del volumen para Drupal
+    volumes:
+      - volumenDocker:/shared
+
+  # Servicio para MySQL
+  mysql:
+    # Imagen de Docker a utilizar para MySQL
+    image: mysql:latest
+    # Variables de entorno para configurar MySQL
+    environment:
+      MYSQL_DATABASE: drupal
+      MYSQL_ROOT_PASSWORD: root
+    # Definición del volumen para MySQL
+    volumes:
+      - volumenDocker:/shared

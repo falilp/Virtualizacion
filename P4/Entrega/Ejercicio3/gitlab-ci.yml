@@ -1,0 +1,82 @@
+image: python:3.9  # Utiliza la imagen de Python 3.9
+
+stages:
+  - prepare
+  - execute
+#  - publish
+  - create
+  - insert
+  - documentation
+  - deploy
+
+prepare:
+  stage: prepare
+  script:
+    - git clone https://oauth2:$tokenGITLAB@gitlab.com/vs9820852/vsGitLab.git  # Clona el repositorio
+
+execute:
+  stage: execute
+  script:
+    - pip install pandas matplotlib
+    - python grafica.py  # Ejecuta el script de transformación de datos
+  artifacts:
+    paths:
+      - grafico.png
+
+#publish:
+#  stage: publish
+#  script:
+#    - ls
+#    - >
+#      curl -v -X POST -H "Authorization: Bearer $FIGSHARE_API_TOKEN" \
+#      -F "files[]=grafico.png" \
+#      https://api.figshare.com/v2/account/articles
+#    - pip install requests
+#    - python figshare.py
+
+createReadme:
+  stage: create
+  script:
+    - cat documentacion.txt >> README2.md
+  artifacts:
+    paths:
+      - README2.md
+      - grafico.png
+
+insertImage:
+  stage: insert
+  script:
+    - echo '![My Image](./grafico.png)' >> README2.md
+  artifacts:
+    paths:
+      - README2.md
+      - grafico.png
+
+documentation:
+  stage: documentation
+  script:
+    - apt-get update 
+    - apt-get install -y pandoc
+    - pip install pandoc
+    - pandoc README2.md -o documentation.html
+  artifacts:
+    paths:
+      - documentation.html
+      - README2.md
+      - grafico.png
+
+deploy:
+  stage: deploy
+  script:
+    - apt-get update -qy
+    - git config --global user.email "falilealp@gmail.com"
+    - git config --global user.name "falilp"
+    - git clone https://falilp:${GITHUB_TOKEN}@github.com/falilp/falilp.github.io.git
+    - cd falilp.github.io
+    - cp ../grafico.png ./grafico.png
+    - cp ../documentation.html ./index.html
+    - git add --all
+    - git commit -m "Deploy GitLab"
+    - git push -u origin main
+  only:
+    - main
